@@ -1,38 +1,46 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang='de'>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width,initial-scale=1'>
 <title>Dqrk AI PRO</title>
 <style>
-body{margin:0;font-family:Arial,sans-serif;background:#0f172a;color:#fff;display:flex;flex-direction:column;height:100vh}header{padding:15px;background:#111827;font-weight:bold}#chat{flex:1;overflow:auto;padding:20px}.msg{margin:10px 0;padding:12px;border-radius:10px}.user{background:#2563eb}.ai{background:#1f2937}.bar{display:flex;padding:15px;background:#111827;gap:10px}input{flex:1;padding:12px;border-radius:10px;border:none}button{padding:12px 18px;border:none;border-radius:10px;background:#2563eb;color:#fff;cursor:pointer}.login{padding:20px}.hidden{display:none}
+:root{--bg:#f9f9f8;--side:#f3f2ef;--text:#1d1d1d;--muted:#666;--accent:#d97757;--border:#e5e5e0}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex}#sidebar{width:260px;background:var(--side);border-right:1px solid var(--border);padding:16px;display:flex;flex-direction:column}#main{flex:1;display:flex;flex-direction:column}button,input,textarea{font:inherit}.btn{padding:10px 14px;border:1px solid var(--border);background:#fff;border-radius:10px;cursor:pointer}.chatlist,.projects{margin-top:10px;display:flex;flex-direction:column;gap:8px}.item{padding:10px;border-radius:8px;background:#fff;border:1px solid var(--border);cursor:pointer}.header{padding:16px 22px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between}.messages{flex:1;overflow:auto;padding:25px;display:flex;flex-direction:column;gap:16px}.msg{max-width:75%;padding:14px;border-radius:14px;line-height:1.5}.user{background:#fff;border:1px solid var(--border);align-self:flex-end}.ai{background:#efe7e3;align-self:flex-start}.bar{padding:16px;border-top:1px solid var(--border);display:flex;gap:10px}.bar textarea{flex:1;padding:12px;border:1px solid var(--border);border-radius:12px;height:52px}.send{background:var(--accent);color:#fff;border:none;padding:0 18px;border-radius:12px}.login{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center}.card{background:#fff;padding:24px;border-radius:18px;width:360px}.hidden{display:none}@media(max-width:768px){#sidebar{display:none}}
 </style>
 </head>
 <body>
-<header>Dqrk AI PRO</header>
-<div id="login" class="login">
-<h2>Anmelden</h2>
-<input id="email" placeholder="E-Mail"><br><br>
-<input id="password" type="password" placeholder="Passwort"><br><br>
-<button onclick="login()">Einloggen</button>
-<button onclick="register()">Registrieren</button>
-<p id="status"></p>
+<div id='sidebar'>
+<h2>Dqrk AI</h2>
+<button class='btn' onclick='newChat()'>+ Neuer Chat</button>
+<h4>Projekte</h4><div class='projects'><div class='item'>Marketing</div><div class='item'>Coding</div></div>
+<h4>Chats</h4><div id='chatlist' class='chatlist'></div>
+<div style='margin-top:auto'><button class='btn' onclick='logout()'>Abmelden</button></div>
 </div>
-<div id="app" class="hidden">
-<div id="chat"></div>
-<div class="bar">
-<input id="msg" placeholder="Nachricht schreiben...">
-<button onclick="sendMsg()">Senden</button>
+<div id='main'>
+<div class='header'><b>Dqrk AI PRO</b><span id='userLabel'></span></div>
+<div id='messages' class='messages'><div class='msg ai'>Willkommen zurück. Frag mich alles.</div></div>
+<div class='bar'><textarea id='input' placeholder='Nachricht an Dqrk AI...'></textarea><button class='send' onclick='send()'>Senden</button></div>
 </div>
-</div>
+<div id='login' class='login'>
+<div class='card'>
+<h3>Anmelden</h3>
+<input id='email' placeholder='E-Mail' style='width:100%;padding:12px;margin:8px 0;border:1px solid #ddd;border-radius:10px'>
+<input id='pass' type='password' placeholder='Passwort' style='width:100%;padding:12px;margin:8px 0;border:1px solid #ddd;border-radius:10px'>
+<button class='btn' style='width:100%;margin-top:8px' onclick='login()'>Einloggen</button>
+<button class='btn' style='width:100%;margin-top:8px' onclick='register()'>Registrieren</button>
+<p id='status'></p>
+</div></div>
 <script>
-const OPENAI_KEY='DEIN_OPENAI_KEY_HIER';
-function login(){localStorage.setItem('user',document.getElementById('email').value);startApp();}
-function register(){document.getElementById('status').innerText='Registriert. Bitte einloggen.';}
-function startApp(){document.getElementById('login').classList.add('hidden');document.getElementById('app').classList.remove('hidden');}
-if(localStorage.getItem('user')) startApp();
-function add(text,cls){const d=document.createElement('div');d.className='msg '+cls;d.textContent=text;document.getElementById('chat').appendChild(d);chat.scrollTop=chat.scrollHeight;}
-async function sendMsg(){const input=document.getElementById('msg');const text=input.value.trim();if(!text)return;add(text,'user');input.value='';const res=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+OPENAI_KEY},body:JSON.stringify({model:'gpt-4o-mini',messages:[{role:'user',content:text}]})});const data=await res.json();add(data.choices[0].message.content,'ai');}
+const KEY='DEIN_OPENAI_KEY'; let chats=JSON.parse(localStorage.getItem('dqrk_chats')||'[]');
+function renderChats(){chatlist.innerHTML=''; chats.forEach((c,i)=>{let d=document.createElement('div');d.className='item';d.textContent=c;chatlist.appendChild(d)})}
+function newChat(){chats.unshift('Chat '+(chats.length+1));localStorage.setItem('dqrk_chats',JSON.stringify(chats));renderChats()}
+function register(){status.textContent='Konto erstellt. Jetzt einloggen.'}
+function login(){const e=email.value.trim(); if(!e)return; localStorage.setItem('dqrk_user',e); start();}
+function logout(){localStorage.removeItem('dqrk_user'); location.reload()}
+function start(){login.classList.add('hidden'); userLabel.textContent=localStorage.getItem('dqrk_user'); renderChats()}
+if(localStorage.getItem('dqrk_user')) start();
+function add(text,cls){let d=document.createElement('div');d.className='msg '+cls;d.textContent=text;messages.appendChild(d);messages.scrollTop=messages.scrollHeight}
+async function send(){let t=input.value.trim(); if(!t)return; add(t,'user'); input.value=''; add('Schreibt...','ai'); let typing=messages.lastChild; try{let r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+KEY},body:JSON.stringify({model:'gpt-4o-mini',messages:[{role:'user',content:t}]})}); let j=await r.json(); typing.remove(); add(j.choices?.[0]?.message?.content||'Keine Antwort. Prüfe API Key.','ai')}catch(e){typing.remove(); add('Fehler: API Key eintragen oder Verbindung prüfen.','ai')}}
 </script>
-</body>
-</html>
+</body></html>
