@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dqrk AI PRO</title>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#0f172a;color:#fff;display:flex;flex-direction:column;height:100vh}header{padding:15px;background:#111827;font-weight:bold}#chat{flex:1;overflow:auto;padding:20px}.msg{margin:10px 0;padding:12px;border-radius:10px}.user{background:#2563eb}.ai{background:#1f2937}.bar{display:flex;padding:15px;background:#111827;gap:10px}input{flex:1;padding:12px;border-radius:10px;border:none}button{padding:12px 18px;border:none;border-radius:10px;background:#2563eb;color:#fff;cursor:pointer}.login{padding:20px}.hidden{display:none}
+</style>
+</head>
+<body>
+<header>Dqrk AI PRO</header>
+<div id="login" class="login">
+<h2>Anmelden</h2>
+<input id="email" placeholder="E-Mail"><br><br>
+<input id="password" type="password" placeholder="Passwort"><br><br>
+<button onclick="login()">Einloggen</button>
+<button onclick="register()">Registrieren</button>
+<p id="status"></p>
+</div>
+<div id="app" class="hidden">
+<div id="chat"></div>
+<div class="bar">
+<input id="msg" placeholder="Nachricht schreiben...">
+<button onclick="sendMsg()">Senden</button>
+</div>
+</div>
+<script>
+const OPENAI_KEY='DEIN_OPENAI_KEY_HIER';
+function login(){localStorage.setItem('user',document.getElementById('email').value);startApp();}
+function register(){document.getElementById('status').innerText='Registriert. Bitte einloggen.';}
+function startApp(){document.getElementById('login').classList.add('hidden');document.getElementById('app').classList.remove('hidden');}
+if(localStorage.getItem('user')) startApp();
+function add(text,cls){const d=document.createElement('div');d.className='msg '+cls;d.textContent=text;document.getElementById('chat').appendChild(d);chat.scrollTop=chat.scrollHeight;}
+async function sendMsg(){const input=document.getElementById('msg');const text=input.value.trim();if(!text)return;add(text,'user');input.value='';const res=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+OPENAI_KEY},body:JSON.stringify({model:'gpt-4o-mini',messages:[{role:'user',content:text}]})});const data=await res.json();add(data.choices[0].message.content,'ai');}
+</script>
+</body>
+</html>
